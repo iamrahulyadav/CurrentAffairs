@@ -1,0 +1,72 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="MyMaterialTheme.Base" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="MyMaterialTheme" parent="MyMaterialTheme.Base"></style>
+
+
+    <!-- Light base activity theme -->
+    <style name="ActivityTheme.Primary.Base.Light" parent="MyMaterialTheme.Base">
+
+
+        <item name="colorAccent">#0075ff</item>
+        <item name="primaryTextColor">#1e1e21</item>
+        <item name="secondaryTextColor">#c8636363</item>
+        <item name="backgroundCardColor">#FFFF</item>
+        <item name="dividerColor">#F2F2F3</item>
+        <item name="backgroundColor">#F4F4F6</item>
+
+        <item name="primaryTextAccentColor">#fdfafafa</item>
+        <item name="secondaryTextAccentColor">#e7e7e7</item>
+
+        <item name="readMaskColor">#6effffff</item>
+
+    </style>
+
+    <!-- Dark base activity theme -->
+    <style name="ActivityTheme.Primary.Base.Dark" parent="Theme.AppCompat.NoActionBar">
+        <item name="primaryTextColor">#F4F4F6</item>
+        <item name="secondaryTextColor">#96F4F4F6</item>
+        <item name="backgroundCardColor">#28292e</item>
+        <item name="dividerColor">#F2F2F3</item>
+        <item name="backgroundColor">#33343B</item>
+        <item name="colorAccent">#0075ff</item>
+        <item name="primaryTextAccentColor">#F4F4F6</item>
+        <item name="secondaryTextAccentColor">#96F4F4F6</item>
+
+        <item name="readMaskColor">#6e000000</item>
+    </style>
+
+
+    <!-- Specific Feed activity theme -->
+    <style name="LightActivityTheme" parent="ActivityTheme.Primary.Base.Light">
+    </style>
+
+    <style name="DarkActivityTheme" parent="ActivityTheme.Primary.Base.Dark">
+    </style>
+
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+</resources>

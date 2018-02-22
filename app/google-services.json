@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "573806822532",
+    "firebase_url": "https://current-affair-6264b.firebaseio.com",
+    "project_id": "current-affair-6264b",
+    "storage_bucket": "current-affair-6264b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:573806822532:android:55125aac42c6146d",
+        "android_client_info": {
+          "package_name": "gk.affairs.current.craftystudio.app.currentaffairs"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "573806822532-31eeasg771i0u3481l98o1fp2d89gorf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzEjdbwAGdzFx-rzvoWRJ3UfENhvPx2CU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

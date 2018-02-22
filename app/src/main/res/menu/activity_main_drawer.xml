@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <item
+        android:id="@+id/nav_bookmark"
+        android:icon="@drawable/ic_bookmark"
+        android:title="Bookmarks" />
+
+    <item android:title="Mode">
+        <menu>
+            <item
+                android:id="@+id/nav_night_mode"
+                android:icon="@drawable/ic_action_night_mode"
+                android:title="Night Mode" />
+            <item
+                android:id="@+id/nav_day_mode"
+                android:icon="@drawable/ic_action_day_mode"
+                android:title="Day Mode" />
+        </menu>
+    </item>
+
+
+    <item android:title="Help and Support">
+        <menu>
+            <item
+                android:id="@+id/nav_share"
+                android:icon="@drawable/ic_menu_share"
+                android:title="Share" />
+
+            <item
+                android:id="@+id/nav_rate_us"
+                android:icon="@drawable/ic_action_rate_us"
+                android:title="Rate us" />
+
+            <item
+                android:id="@+id/nav_suggestion"
+                android:icon="@drawable/ic_action_suggestion"
+                android:title="Suggestion" />
+
+        </menu>
+    </item>
+
+</menu>

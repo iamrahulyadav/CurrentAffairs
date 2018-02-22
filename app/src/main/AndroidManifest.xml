@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="gk.affairs.current.craftystudio.app.currentaffairs">
+
+    <application
+        android:name="utils.VolleyManager"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/LightActivityTheme">
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"
+            android:theme="@style/LightActivityTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".BookMarkActivity"
+            android:label="@string/title_activity_book_mark"
+            android:screenOrientation="portrait"
+            android:theme="@style/LightActivityTheme">
+        </activity>
+
+        <service android:name="utils.FireBasePushNotificationService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="acc1b0b9ec29985ac9dbef0f05837dac47e0b387" />
+    </application>
+
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>

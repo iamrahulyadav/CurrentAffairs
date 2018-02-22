@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <declare-styleable name="NightMode">
+        <attr name="primaryColor" format="color" />
+        <attr name="primaryDarkColor" format="color" />
+
+
+        <attr name="dividerColor" format="color" />
+        <attr name="backgroundColor" format="color" />
+
+        <attr name="backgroundCardColor" format="color" />
+        <attr name="primaryTextColor" format="color" />
+        <attr name="secondaryTextColor" format="color" />
+        <attr name="readMaskColor" format="color" />
+
+        <attr name="primaryTextAccentColor" format="color" />
+        <attr name="secondaryTextAccentColor" format="color" />
+
+
+    </declare-styleable>
+
+
+</resources>

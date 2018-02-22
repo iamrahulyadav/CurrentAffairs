@@ -1,0 +1,65 @@
+<resources>
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+
+
+    <style name="MyMaterialTheme" parent="MyMaterialTheme.Base">
+        <item name="android:windowContentTransitions">true</item>
+        <item name="android:windowAllowEnterTransitionOverlap">true</item>
+        <item name="android:windowAllowReturnTransitionOverlap">true</item>
+        <item name="android:windowSharedElementEnterTransition">@android:transition/move</item>
+        <item name="android:windowSharedElementExitTransition">@android:transition/move</item>
+    </style>
+
+
+    <!-- Light base activity theme -->
+    <style name="ActivityTheme.Primary.Base.Light" parent="MyMaterialTheme.Base">
+
+        <item name="android:colorPrimary">@color/colorPrimary</item>
+        <item name="android:colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">#0075ff</item>
+        <item name="primaryTextColor">#1e1e21</item>
+        <item name="secondaryTextColor">#c8636363</item>
+        <item name="backgroundCardColor">#FFFF</item>
+        <item name="dividerColor">#F2F2F3</item>
+        <item name="backgroundColor">#F4F4F6</item>
+
+        <item name="primaryTextAccentColor">#fdfafafa</item>
+        <item name="secondaryTextAccentColor">#e7e7e7</item>
+
+        <item name="readMaskColor">#6effffff</item>
+
+    </style>
+
+
+    <!-- Dark base activity theme -->
+    <style name="ActivityTheme.Primary.Base.Dark" parent="Theme.AppCompat.NoActionBar">
+
+        <item name="primaryTextColor">#F4F4F6</item>
+        <item name="secondaryTextColor">#96F4F4F6</item>
+        <item name="backgroundCardColor">#28292e</item>
+        <item name="dividerColor">#F2F2F3</item>
+        <item name="backgroundColor">#33343B</item>
+        <item name="colorAccent">#0075ff</item>
+
+        <item name="primaryTextAccentColor">#F4F4F6</item>
+        <item name="secondaryTextAccentColor">#96F4F4F6</item>
+
+        <item name="readMaskColor">#6e000000</item>
+
+    </style>
+
+
+    <!-- Specific Feed activity theme -->
+    <style name="LightActivityTheme" parent="ActivityTheme.Primary.Base.Light">
+    </style>
+
+    <style name="DarkActivityTheme" parent="ActivityTheme.Primary.Base.Dark"></style>
+
+
+</resources>

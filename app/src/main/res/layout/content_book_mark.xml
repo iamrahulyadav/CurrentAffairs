@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="gk.affairs.current.craftystudio.app.currentaffairs.BookMarkActivity"
+    tools:showIn="@layout/activity_book_mark">
+
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/mainActivity_viewpager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible">
+
+    </android.support.v4.view.ViewPager>
+
+</LinearLayout>
