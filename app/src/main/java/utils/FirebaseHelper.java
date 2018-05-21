@@ -126,12 +126,16 @@ public class FirebaseHelper {
         documentReference.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                ArrayList<News> newsArrayList = new ArrayList<>();
-                News news = task.getResult().toObject(News.class);
-                news.setNewsID(task.getResult().getId());
-                newsArrayList.add(news);
+                if (task.isSuccessful()) {
+                    ArrayList<News> newsArrayList = new ArrayList<>();
+                    News news = task.getResult().toObject(News.class);
+                    news.setNewsID(task.getResult().getId());
+                    newsArrayList.add(news);
 
-                newsListener.onNewsList(newsArrayList,true);
+                    newsListener.onNewsList(newsArrayList, true);
+                }else{
+                    newsListener.onNewsList(null,false);
+                }
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override

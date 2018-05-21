@@ -1,5 +1,8 @@
 package gk.affairs.current.craftystudio.app.currentaffairs;
 
+import android.app.DatePickerDialog;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -13,6 +16,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
@@ -25,12 +29,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.DatePicker;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.ContentViewEvent;
 import com.crashlytics.android.answers.CustomEvent;
+import com.facebook.ads.Ad;
+import com.facebook.ads.AdError;
+import com.facebook.ads.AdListener;
+import com.facebook.ads.NativeAd;
+import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
@@ -38,9 +48,15 @@ import com.google.firebase.dynamiclinks.PendingDynamicLinkData;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import io.fabric.sdk.android.Fabric;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 
+import utils.AppRater;
 import utils.FirebaseHelper;
 import utils.News;
 import utils.SettingManager;
@@ -50,7 +66,7 @@ import utils.ZoomOutPageTransformer;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, TextToSpeech.OnInitListener {
 
-    private final int articleCount=15;
+    private final int articleCount = 15;
 
     private ViewPager mPager;
     private PagerAdapter mPagerAdapter;
@@ -62,6 +78,8 @@ public class MainActivity extends AppCompatActivity
 
     boolean isPushNotification, isShareArticle;
     private boolean isLoading = false;
+    ProgressDialog pDialog;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +91,11 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        pDialog = new ProgressDialog(this);
+
+        showLoadingDialog("Loading...");
+
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -128,25 +151,36 @@ public class MainActivity extends AppCompatActivity
         /*For push notification*/
         FirebaseMessaging.getInstance().subscribeToTopic("subscribed");
 
+        try {
+            AppRater.app_launched(this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         try {
             Intent intent = getIntent();
             News news = (News) intent.getSerializableExtra("news");
 
-            isPushNotification = intent.getBooleanExtra("pushNotification", false);
+            if (news != null) {
+                isPushNotification = intent.getBooleanExtra("pushNotification", false);
 
-            downloadNewsByID(news.getNewsID());
+                downloadNewsByID(news.getNewsID());
 
-            Toast.makeText(this, "Notification - " + news.getNewsTitle(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Notification - " + news.getNewsTitle(), Toast.LENGTH_SHORT).show();
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
 
 
+        MobileAds.initialize(getApplicationContext(), "ca-app-pub-8455191357100024~2021354499");
+
+
+
+
 
     }
-
 
     private void openDynamicLink() {
         downloadNews();
@@ -180,7 +214,6 @@ public class MainActivity extends AppCompatActivity
                             Log.d("editorial", "getInvitation: no deep link found.");
 
 
-
                         }
 
                     }
@@ -189,7 +222,6 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         Log.d("editorial", "getInvitation: no deep link found.");
-
 
 
                     }
@@ -212,8 +244,10 @@ public class MainActivity extends AppCompatActivity
                 mPager.setCurrentItem(0);
                 mPager.setAdapter(mPagerAdapter);
 
+                hideLoadingDialog();
 
                 downloadNews();
+
             }
 
             @Override
@@ -237,6 +271,10 @@ public class MainActivity extends AppCompatActivity
                     checkRepeatedArticle();
                 }
 
+                hideLoadingDialog();
+
+
+                addNativeAds();
 
             }
 
@@ -276,19 +314,65 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void checkRepeatedArticle() {
-        News firstNews = newsArrayList.get(0);
-        for (int i = 1; i < newsArrayList.size(); i++) {
-            News news = newsArrayList.get(i);
-            if (firstNews.getNewsID().equalsIgnoreCase(news.getNewsID())) {
-                newsArrayList.remove(i);
-                break;
+        if (!newsArrayList.isEmpty()) {
+            News firstNews = newsArrayList.get(0);
+            for (int i = 1; i < newsArrayList.size(); i++) {
+                News news = newsArrayList.get(i);
+                if (firstNews.getNewsID().equalsIgnoreCase(news.getNewsID())) {
+                    newsArrayList.remove(i);
+                    break;
+                }
+
             }
 
+            mPagerAdapter.notifyDataSetChanged();
         }
-
-        mPagerAdapter.notifyDataSetChanged();
     }
 
+    public void addNativeAds() {
+
+        for (int i = 1; i < newsArrayList.size(); i = i + NewsFragment.adsCount) {
+            if (newsArrayList.get(i).getNativeAd() == null) {
+
+                NativeAd nativeAd = new NativeAd(this, "1641103999319593_1641104795986180");
+                nativeAd.setAdListener(new AdListener() {
+
+                    @Override
+                    public void onError(Ad ad, AdError adError) {
+                        Log.d("TAG", "onError: " + adError.getErrorMessage());
+
+                        try {
+                            Answers.getInstance().logCustom(new CustomEvent("Ad failed").putCustomAttribute("message", adError.getErrorMessage()).putCustomAttribute("Placement", "banner"));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onAdLoaded(Ad ad) {
+
+                    }
+
+                    @Override
+                    public void onAdClicked(Ad ad) {
+
+                    }
+
+
+                    @Override
+                    public void onLoggingImpression(Ad ad) {
+
+                    }
+                });
+
+                // Initiate a request to load an ad.
+                nativeAd.loadAd();
+
+                newsArrayList.get(i).setNativeAd(nativeAd);
+
+            }
+        }
+    }
 
     @Override
     public void onBackPressed() {
@@ -303,7 +387,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        //getMenuInflater().inflate(R.menu.main, menu);
+        getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
@@ -315,12 +399,78 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_date_selection) {
+            onSortByDateClick();
+            return true;
+        } else if (id == R.id.action_date) {
+            onSortByDateClick();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
+
+    private void onSortByDateClick() {
+        Calendar c = Calendar.getInstance();
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(
+                this, new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                //Toast.makeText(EditorialListWithNavActivity.this, "Date selected +" + dayOfMonth + " - " + month, Toast.LENGTH_SHORT).show();
+
+                String str_date = dayOfMonth + "-" + (month + 1) + "-" + year;
+                DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+                try {
+                    Date date = (Date) formatter.parse(str_date);
+
+                    long sortDateMillis = date.getTime();
+
+                    fetchNewsByDate(sortDateMillis);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
+
+        datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
+        datePickerDialog.getDatePicker().setMinDate(1519151400000l);
+        datePickerDialog.show();
+
+    }
+
+    private void fetchNewsByDate(long sortDateMillis) {
+
+        showLoadingDialog("Loading...");
+
+        new FirebaseHelper().fetchNewsList(sortDateMillis, (sortDateMillis + 86400000), new FirebaseHelper.NewsListener() {
+            @Override
+            public void onNewsList(ArrayList<News> newsArrayList, boolean isSuccesful) {
+                if (isSuccesful) {
+
+                    MainActivity.this.newsArrayList.clear();
+
+                    MainActivity.this.newsArrayList.addAll(newsArrayList);
+
+                    mPagerAdapter.notifyDataSetChanged();
+                    mPager.setAdapter(mPagerAdapter);
+                    hideLoadingDialog();
+
+                } else {
+                    Toast.makeText(MainActivity.this, "No internet connection", Toast.LENGTH_SHORT).show();
+                    hideLoadingDialog();
+                }
+            }
+
+            @Override
+            public void onNewsInsert(boolean isSuccessful) {
+
+            }
+        });
+    }
+
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -341,11 +491,49 @@ public class MainActivity extends AppCompatActivity
             onSuggestionClick();
         } else if (id == R.id.nav_rate_us) {
             onRateUsClick();
+        } else if (id == R.id.nav_text_size) {
+            onTextSizeClick();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+
+    public void onTextSizeClick() {
+
+        final CharSequence sources[] = new CharSequence[]{"Small", "Medium", "Large", "Extra Large"};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Choose Text Size");
+        builder.setItems(sources, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+
+                int size = 14;
+
+                if (which == 0) {
+                    size = 14;
+                } else if (which == 1) {
+                    size = 16;
+                } else if (which == 2) {
+                    size = 18;
+                } else if (which == 3) {
+                    size = 20;
+                }
+
+
+                SettingManager.setTextSize(MainActivity.this, size);
+
+                mPager.setAdapter(mPagerAdapter);
+
+            }
+        });
+
+        builder.show();
+
     }
 
     private void onNightModeClick() {
@@ -362,7 +550,6 @@ public class MainActivity extends AppCompatActivity
         Intent intent = new Intent(this, BookMarkActivity.class);
         startActivity(intent);
     }
-
 
     private void initializeViewPager() {
 
@@ -391,7 +578,6 @@ public class MainActivity extends AppCompatActivity
                 }
 
 
-
             }
 
             @Override
@@ -405,30 +591,12 @@ public class MainActivity extends AppCompatActivity
 
         mPager.setClipToPadding(false);
         mPager.setPadding(16 * px, 8 * px, 16 * px, 8 * px);
-        mPager.setPageMargin(10 * px);
+        mPager.setPageMargin(8 * px);
 
     }
 
-
     public void onTTSReaderClick(View view) {
 
-        tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
-            @Override
-            public void onStart(String s) {
-
-            }
-
-            @Override
-            public void onDone(String s) {
-
-
-            }
-
-            @Override
-            public void onError(String s) {
-
-            }
-        });
 
         if (tts.isSpeaking()) {
             speakOutWord(".");
@@ -436,7 +604,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         currentReadingArticle = mPager.getCurrentItem();
-        String string = newsArrayList.get(currentReadingArticle).getNewsTitle() + ". " + newsArrayList.get(currentReadingArticle).getNewsDescription().replaceAll("<br>",".");
+        String string = newsArrayList.get(currentReadingArticle).getNewsTitle() + ". " + newsArrayList.get(currentReadingArticle).getNewsDescription().replaceAll("<br>", ".").replaceAll("<b>", "").replaceAll("</b>", "");
 
         speakOutWord(string);
 
@@ -543,6 +711,19 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+
+    public void showLoadingDialog(String message) {
+        pDialog.setMessage(message);
+        pDialog.show();
+    }
+
+    public void hideLoadingDialog() {
+        try {
+            pDialog.hide();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     public class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
         public ScreenSlidePagerAdapter(FragmentManager fm) {

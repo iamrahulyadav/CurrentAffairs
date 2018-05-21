@@ -29,7 +29,7 @@ public class SettingManager {
     public static int getTextSize(Context mContext ) {
         SharedPreferences prefs = mContext.getSharedPreferences("settings", 0);
 
-        return prefs.getInt("textSize", 16);
+        return prefs.getInt("textSize", 14);
 
     }
 

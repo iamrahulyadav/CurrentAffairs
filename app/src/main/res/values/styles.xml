@@ -58,15 +58,17 @@
 
 
     <!-- Specific Feed activity theme -->
-    <style name="LightActivityTheme" parent="ActivityTheme.Primary.Base.Light">
-    </style>
+    <style name="LightActivityTheme" parent="ActivityTheme.Primary.Base.Light"></style>
 
-    <style name="DarkActivityTheme" parent="ActivityTheme.Primary.Base.Dark">
-    </style>
+    <style name="DarkActivityTheme" parent="ActivityTheme.Primary.Base.Dark"></style>
 
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="LightActivityTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="LightActivityTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
 </resources>

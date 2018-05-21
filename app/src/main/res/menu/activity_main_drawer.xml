@@ -8,7 +8,7 @@
         android:icon="@drawable/ic_bookmark"
         android:title="Bookmarks" />
 
-    <item android:title="Mode">
+    <item android:title="Settings">
         <menu>
             <item
                 android:id="@+id/nav_night_mode"
@@ -18,8 +18,16 @@
                 android:id="@+id/nav_day_mode"
                 android:icon="@drawable/ic_action_day_mode"
                 android:title="Day Mode" />
+
+            <item
+                android:id="@+id/nav_text_size"
+                android:title="Change Text Size" />
         </menu>
     </item>
+
+
+
+
 
 
     <item android:title="Help and Support">

@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="gk.affairs.current.craftystudio.app.currentaffairs">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name="utils.VolleyManager"
         android:allowBackup="true"
@@ -25,8 +27,7 @@
             android:name=".BookMarkActivity"
             android:label="@string/title_activity_book_mark"
             android:screenOrientation="portrait"
-            android:theme="@style/LightActivityTheme">
-        </activity>
+            android:theme="@style/LightActivityTheme"></activity>
 
         <service android:name="utils.FireBasePushNotificationService">
             <intent-filter>
@@ -37,7 +38,11 @@
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="acc1b0b9ec29985ac9dbef0f05837dac47e0b387" />
+
+        <activity
+            android:name=".WebActivity"
+            android:label="@string/title_activity_web"
+            android:theme="@style/LightActivityTheme"></activity>
     </application>
 
-    <uses-permission android:name="android.permission.INTERNET" />
 </manifest>

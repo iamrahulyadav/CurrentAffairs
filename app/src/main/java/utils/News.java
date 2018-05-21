@@ -1,5 +1,7 @@
 package utils;
 
+import com.facebook.ads.NativeAd;
+
 import java.io.Serializable;
 
 /**
@@ -10,6 +12,9 @@ public class News implements Serializable {
     private String newsTitle, newsDescription, newsImageURL, newsTopic, newsSource, newsSourceLink, newsID;
     private long timeInMillis;
     boolean pushNotification = false;
+
+    private transient NativeAd nativeAd;
+
 
     public String getNewsTitle() {
         return newsTitle;
@@ -81,5 +86,13 @@ public class News implements Serializable {
 
     public void setPushNotification(boolean pushNotification) {
         this.pushNotification = pushNotification;
+    }
+
+    public NativeAd getNativeAd() {
+        return nativeAd;
+    }
+
+    public void setNativeAd(NativeAd nativeAd) {
+        this.nativeAd = nativeAd;
     }
 }

@@ -9,12 +9,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.CardView;
 import android.text.Html;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,6 +25,14 @@ import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
+import com.facebook.ads.Ad;
+import com.facebook.ads.AdError;
+import com.facebook.ads.AdListener;
+import com.facebook.ads.NativeAd;
+import com.facebook.ads.NativeAdView;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
@@ -53,6 +64,8 @@ public class NewsFragment extends Fragment {
     int count;
 
     private OnFragmentInteractionListener mListener;
+
+    public static final int adsCount = 3;
 
     public NewsFragment() {
         // Required empty public constructor
@@ -97,8 +110,14 @@ public class NewsFragment extends Fragment {
 
         sourceTextView.setText(news.getNewsSource());
 
+
+        int textSize = SettingManager.getTextSize(getContext());
+
+        descriptionTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize);
+        titleTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize + 4);
+
         try {
-            news.setNewsDescription(news.getNewsDescription().replaceAll("\n","<br>"));
+            news.setNewsDescription(news.getNewsDescription().replaceAll("\n", "<br>"));
 
             if (Build.VERSION.SDK_INT >= 24) {
                 descriptionTextView.setText(Html.fromHtml(news.getNewsDescription(), Html.FROM_HTML_SEPARATOR_LINE_BREAK_PARAGRAPH));
@@ -111,13 +130,9 @@ public class NewsFragment extends Fragment {
             dateTextView.setText(myDate);
 
 
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
-
 
 
         try {
@@ -152,8 +167,159 @@ public class NewsFragment extends Fragment {
             }
         });
 
+        titleTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                openNewsLink();
+            }
+        });
+
+
+        if (news.getNativeAd() != null) {
+            initializeNativeAd(view);
+        }
+
 
         return view;
+    }
+
+
+    private void initializeNativeAd(final View view) {
+
+        final NativeAd nativeAd = news.getNativeAd();
+        if (nativeAd != null) {
+
+            if (nativeAd.isAdLoaded()) {
+
+                LinearLayout adContainer = view.findViewById(R.id.newsFragment_native_adContainer);
+                adContainer.setVisibility(View.VISIBLE);
+
+                adContainer.removeAllViews();
+
+                View adView = NativeAdView.render(getContext(), nativeAd, NativeAdView.Type.HEIGHT_300);
+                // Add the Native Ad View to your ad container
+                adContainer.addView(adView);
+
+
+            } else {
+
+                nativeAd.setAdListener(new AdListener() {
+                    @Override
+                    public void onError(Ad ad, AdError adError) {
+
+                        initializeNativeAd(view, true);
+
+                    }
+
+                    @Override
+                    public void onAdLoaded(Ad ad) {
+
+                        if (view != null) {
+
+                            try {
+                                LinearLayout adContainer = view.findViewById(R.id.newsFragment_native_adContainer);
+                                adContainer.setVisibility(View.VISIBLE);
+
+
+                                adContainer.removeAllViews();
+
+                                View adView = NativeAdView.render(getContext(), nativeAd, NativeAdView.Type.HEIGHT_300);
+                                // Add the Native Ad View to your ad container
+                                adContainer.addView(adView);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                        }
+
+                    }
+
+                    @Override
+                    public void onAdClicked(Ad ad) {
+
+                    }
+
+                    @Override
+                    public void onLoggingImpression(Ad ad) {
+
+                    }
+                });
+
+                View adContainer = view.findViewById(R.id.newsFragment_native_adContainer);
+                adContainer.setVisibility(View.GONE);
+
+            }
+        } else {
+            View adContainer = view.findViewById(R.id.newsFragment_native_adContainer);
+            adContainer.setVisibility(View.GONE);
+
+        }
+
+
+    }
+
+    private void initializeNativeAd(final View view, boolean admob) {
+
+        try {
+            final AdView adView = new AdView(getContext());
+            adView.setAdSize(AdSize.BANNER);
+            adView.setAdUnitId("ca-app-pub-8455191357100024/4907086877");
+
+
+            AdRequest request = new AdRequest.Builder().build();
+            adView.loadAd(request);
+
+            adView.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+
+
+            adView.setAdListener(new com.google.android.gms.ads.AdListener() {
+
+                @Override
+                public void onAdFailedToLoad(int i) {
+                    super.onAdFailedToLoad(i);
+
+                    try {
+                        Answers.getInstance().logCustom(new CustomEvent("Ad failed to load")
+                                .putCustomAttribute("Placement", "Feed native bottom").putCustomAttribute("errorType", i));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onAdLoaded() {
+                    super.onAdLoaded();
+
+                    LinearLayout cardView = view.findViewById(R.id.newsFragment_native_adContainer);
+                    cardView.setVisibility(View.VISIBLE);
+
+                    cardView.removeAllViews();
+                    cardView.addView(adView);
+
+                }
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+    private void openNewsLink() {
+
+       /* Intent intent = new Intent(getContext(),WebActivity.class);
+        intent.putExtra("link",news.getNewsSourceLink());
+        startActivity(intent);
+*/
+
+        try {
+
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(news.getNewsSourceLink())));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void onBookMarkClick() {
@@ -188,7 +354,7 @@ public class NewsFragment extends Fragment {
         pd.show();
 
         Task<ShortDynamicLink> shortLinkTask = FirebaseDynamicLinks.getInstance().createDynamicLink()
-                .setLink(Uri.parse("https://goo.gl/Ae4Mhw?newsID=" + news.getNewsID()))
+                .setLink(Uri.parse("https://goo.gl/WDXMaQ?newsID=" + news.getNewsID()))
                 .setDynamicLinkDomain(appCode)
                 .setAndroidParameters(
                         new DynamicLink.AndroidParameters.Builder(packageName)
@@ -239,19 +405,19 @@ public class NewsFragment extends Fragment {
     }
 
     private void openShareDialog(Uri shortLink) {
-        Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
-        sharingIntent.setType("text/plain");
-
-        //sharingIntent.putExtra(Intent.EXTRA_STREAM, newsMetaInfo.getNewsImageLocalPath());
-
-        sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Download the app and Start reading");
-        sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shortLink
-                + "\n" + news.getNewsTitle()
-                + "\n\nRead full News at Current affairs app");
-        startActivity(Intent.createChooser(sharingIntent, "Share News via"));
-
-
         try {
+            Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+            sharingIntent.setType("text/plain");
+
+            //sharingIntent.putExtra(Intent.EXTRA_STREAM, newsMetaInfo.getNewsImageLocalPath());
+
+            sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Download the app and Start reading");
+            sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shortLink
+                    + "\n" + news.getNewsTitle()
+                    + "\n\nRead full News at Current affairs app");
+            startActivity(Intent.createChooser(sharingIntent, "Share News via"));
+
+
             Answers.getInstance().logCustom(new CustomEvent("share click")
                     .putCustomAttribute("News id", news.getNewsTitle()));
         } catch (Exception e) {
@@ -259,7 +425,6 @@ public class NewsFragment extends Fragment {
         }
 
     }
-
 
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
@@ -279,9 +444,7 @@ public class NewsFragment extends Fragment {
         mListener = null;
     }
 
-
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
 }
