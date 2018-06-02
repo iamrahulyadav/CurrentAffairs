@@ -23,6 +23,7 @@ public class FireBasePushNotificationService extends FirebaseMessagingService {
     String editorialID;
 
     Intent intent;
+    private int contentType;
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
@@ -32,22 +33,56 @@ public class FireBasePushNotificationService extends FirebaseMessagingService {
             return;
         }*/
 
+
+
         // Check if message contains a data payload.
         if (remoteMessage.getData().size() > 0) {
+
+
+            try {
+                contentType = Integer.valueOf(remoteMessage.getData().get("contentType"));
+
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             intent = new Intent(this, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
-            News news = new News();
-            news.setNewsTitle(remoteMessage.getData().get("notificationT"));
-            news.setNewsSource(remoteMessage.getData().get("notificationB"));
-            news.setNewsID(remoteMessage.getData().get("newsID"));
 
-            intent.putExtra("news", news);
-            intent.putExtra("pushNotification", true);
+            if (contentType==1){
 
-            showNotification(remoteMessage.getData().get("notificationT"), remoteMessage.getData().get("notificationB"));
+                News news = new News();
+                news.setNewsTitle(remoteMessage.getData().get("notificationT"));
+                news.setNewsSource(remoteMessage.getData().get("notificationB"));
+                news.setNewsID(remoteMessage.getData().get("newsID"));
+                news.setContentType(contentType);
 
+                intent.putExtra("news", news);
+                intent.putExtra("pushNotification", true);
+
+                showNotification(remoteMessage.getData().get("notificationT"), remoteMessage.getData().get("notificationB"));
+
+
+            }else {
+
+
+
+                News news = new News();
+                news.setNewsTitle(remoteMessage.getData().get("notificationT"));
+                news.setNewsSource(remoteMessage.getData().get("notificationB"));
+                news.setNewsID(remoteMessage.getData().get("newsID"));
+
+                news.setContentType(contentType);
+
+
+                intent.putExtra("news", news);
+                intent.putExtra("pushNotification", true);
+
+                showNotification(remoteMessage.getData().get("notificationT"), remoteMessage.getData().get("notificationB"));
+
+            }
         }
 
 

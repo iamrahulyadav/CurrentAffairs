@@ -7,6 +7,7 @@ import android.media.Image;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
@@ -59,6 +60,7 @@ import utils.VolleyManager;
  */
 public class NewsFragment extends Fragment {
 
+    TextView titleTextView, descriptionTextView, sourceTextView, dateTextView;
 
     News news;
     int count;
@@ -66,11 +68,11 @@ public class NewsFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
 
     public static final int adsCount = 3;
+    private String selectedWord = "";
 
     public NewsFragment() {
-        // Required empty public constructor
-    }
 
+    }
 
     public static NewsFragment newInstance(News currentNews, int fragmentNumber) {
         NewsFragment fragment = new NewsFragment();
@@ -92,11 +94,9 @@ public class NewsFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_news, container, false);
 
-        TextView titleTextView, descriptionTextView, sourceTextView, dateTextView;
         NetworkImageView imageView;
         ImageView shareImageView, bookmarkImageView;
 
@@ -117,17 +117,20 @@ public class NewsFragment extends Fragment {
         titleTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize + 4);
 
         try {
-            news.setNewsDescription(news.getNewsDescription().replaceAll("\n", "<br>"));
+            //news.setNewsDescription(news.getNewsDescription().replaceAll("\n", "<br>"));
+
 
             if (Build.VERSION.SDK_INT >= 24) {
-                descriptionTextView.setText(Html.fromHtml(news.getNewsDescription(), Html.FROM_HTML_SEPARATOR_LINE_BREAK_PARAGRAPH));
+                descriptionTextView.setText(Html.fromHtml(news.getNewsDescription(), Html.FROM_HTML_MODE_LEGACY));
             } else {
                 descriptionTextView.setText(Html.fromHtml(news.getNewsDescription()));
             }
 
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM, yyy  ");
+        /*    SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM, yyy  ");
             String myDate = dateFormat.format(new Date(news.getTimeInMillis()));
-            dateTextView.setText(myDate);
+            dateTextView.setText(myDate);*/
+
+            dateTextView.setText(news.getDate());
 
 
         } catch (Exception e) {
@@ -136,11 +139,16 @@ public class NewsFragment extends Fragment {
 
 
         try {
-            if (news.getNewsImageURL() != null && !news.getNewsImageURL().isEmpty()) {
-                ImageLoader imageLoader = VolleyManager.getInstance().getImageLoader();
+            if (news.getNewsImageURL() != null) {
+                if (!news.getNewsImageURL().isEmpty()) {
+
+                    ImageLoader imageLoader = VolleyManager.getInstance().getImageLoader();
 
 
-                imageView.setImageUrl(news.getNewsImageURL(), imageLoader);
+                    imageView.setImageUrl(news.getNewsImageURL(), imageLoader);
+                } else {
+                    imageView.setVisibility(View.GONE);
+                }
 
 
             } else {
@@ -183,6 +191,48 @@ public class NewsFragment extends Fragment {
         return view;
     }
 
+    public void getSelectedWord(long timeDelay) {
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                String string = descriptionTextView.getText().toString();
+                try {
+                    if (descriptionTextView.hasSelection()) {
+                        selectedWord = string.substring(descriptionTextView.getSelectionStart(), descriptionTextView.getSelectionEnd()).trim();
+                    }
+                } catch (Exception e) {
+                    selectedWord = "word";
+                }
+
+                Toast.makeText(getContext(), "Selected - " + selectedWord, Toast.LENGTH_SHORT).show();
+
+                //loadWebview(selectedWord);
+
+                //translationTextView.setText(selectedWord);
+
+                descriptionTextView.clearFocus();
+
+
+                /*new Translation(selectedWord).fetchTranslation(new Translation.TranslateListener() {
+                    @Override
+                    public void onTranslation(Translation translation) {
+
+                        if (translation.getWord().equalsIgnoreCase(selectedWord.trim())) {
+                            translationTextView.setText(translation.getWord() + " = " + translation.wordTranslation);
+                        }
+
+                    }
+                });*/
+
+
+                Answers.getInstance().logCustom(new CustomEvent("Word Meaning").putCustomAttribute("word", selectedWord));
+
+
+            }
+        }, timeDelay);
+
+    }
 
     private void initializeNativeAd(final View view) {
 
@@ -202,6 +252,7 @@ public class NewsFragment extends Fragment {
 
 
             } else {
+
 
                 nativeAd.setAdListener(new AdListener() {
                     @Override
@@ -243,10 +294,13 @@ public class NewsFragment extends Fragment {
                     public void onLoggingImpression(Ad ad) {
 
                     }
+
                 });
 
                 View adContainer = view.findViewById(R.id.newsFragment_native_adContainer);
                 adContainer.setVisibility(View.GONE);
+
+                initializeNativeAd(view, true);
 
             }
         } else {
@@ -261,6 +315,11 @@ public class NewsFragment extends Fragment {
     private void initializeNativeAd(final View view, boolean admob) {
 
         try {
+
+            if (count == 2) {
+                return;
+            }
+
             final AdView adView = new AdView(getContext());
             adView.setAdSize(AdSize.BANNER);
             adView.setAdUnitId("ca-app-pub-8455191357100024/4907086877");
@@ -290,7 +349,7 @@ public class NewsFragment extends Fragment {
                 public void onAdLoaded() {
                     super.onAdLoaded();
 
-                    LinearLayout cardView = view.findViewById(R.id.newsFragment_native_adContainer);
+                    LinearLayout cardView = view.findViewById(R.id.newsFragment_banner_adContainer);
                     cardView.setVisibility(View.VISIBLE);
 
                     cardView.removeAllViews();
@@ -299,12 +358,13 @@ public class NewsFragment extends Fragment {
                 }
             });
 
+
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-    }
 
+    }
 
     private void openNewsLink() {
 
@@ -354,7 +414,7 @@ public class NewsFragment extends Fragment {
         pd.show();
 
         Task<ShortDynamicLink> shortLinkTask = FirebaseDynamicLinks.getInstance().createDynamicLink()
-                .setLink(Uri.parse("https://goo.gl/WDXMaQ?newsID=" + news.getNewsID()))
+                .setLink(Uri.parse("https://goo.gl/WDXMaQ?newsID=1527744728325&articleID=" + news.getNewsID() + "&contentType=1"))
                 .setDynamicLinkDomain(appCode)
                 .setAndroidParameters(
                         new DynamicLink.AndroidParameters.Builder(packageName)

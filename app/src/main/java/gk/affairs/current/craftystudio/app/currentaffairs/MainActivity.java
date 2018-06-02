@@ -1,22 +1,30 @@
 package gk.affairs.current.craftystudio.app.currentaffairs;
 
 import android.app.DatePickerDialog;
+
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.text.Html;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
@@ -30,12 +38,22 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.DatePicker;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.anjlab.android.iab.v3.BillingProcessor;
+import com.anjlab.android.iab.v3.PurchaseState;
+import com.anjlab.android.iab.v3.TransactionDetails;
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.ContentViewEvent;
 import com.crashlytics.android.answers.CustomEvent;
+import com.crashlytics.android.answers.PurchaseEvent;
 import com.facebook.ads.Ad;
 import com.facebook.ads.AdError;
 import com.facebook.ads.AdListener;
@@ -47,8 +65,12 @@ import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
 import com.google.firebase.dynamiclinks.PendingDynamicLinkData;
 import com.google.firebase.messaging.FirebaseMessaging;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import io.fabric.sdk.android.Fabric;
 
+import java.text.BreakIterator;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -56,17 +78,23 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+import utils.AdsSubscriptionManager;
 import utils.AppRater;
+import utils.CurrentAffairsAdapter;
 import utils.FirebaseHelper;
+import utils.JsonParser;
 import utils.News;
 import utils.SettingManager;
 import utils.SqlDatabaseHelper;
+import utils.VolleyManager;
 import utils.ZoomOutPageTransformer;
+
+import static android.content.ContentValues.TAG;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, TextToSpeech.OnInitListener {
 
-    private final int articleCount = 15;
+    public static final int articleCount = 15;
 
     private ViewPager mPager;
     private PagerAdapter mPagerAdapter;
@@ -80,6 +108,24 @@ public class MainActivity extends AppCompatActivity
     private boolean isLoading = false;
     ProgressDialog pDialog;
 
+
+    RecyclerView recyclerView;
+    CurrentAffairsAdapter currentAffairsAdapter;
+    boolean isListActive = false;
+    ArrayList<Object> recyclerViewArrayList = new ArrayList<>();
+
+
+    FrameLayout frameLayout;
+
+    FragmentTransaction transaction;
+    CurrentAffairsCardFragment currentAffairsCardFragment;
+    CurrentAffairListFragment currentAffairListFragment;
+    private int pageNumber = 2;
+
+
+
+    BillingProcessor bp;
+    final String SUBSCRIPTION_ID = "ads_free";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,30 +149,6 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View view) {
 
 
-              /*  News news = new News();
-                news.setNewsTitle("Titlr njkfsnaunnfd asmnn  kn dbcsa  bjn biucbsdjh sdbkj mnds jn sdkd");
-                news.setNewsDescription("bh bi b iuui iu bkjbiubiu fds iuuid fsid fi  uifsa gfIU GFIUCSD FICUD IUS IDU UIFIUS IFDSUASDU  HUIFHUFHU CHFUDH HFDSBJ DFD FUIF hfuhiuhiv huiu ih sdihsfhuhiushiuhs ufh uhiuhu iusdiuf uh iuhiuhfhshuifdh   uigiufdgfig gdiugiufdgiuhf iu hi hihfudhiufhiuhf");
-                news.setNewsImageURL("http://www.assignmentpoint.com/wp-content/uploads/2017/05/About-Electric-Current.jpg");
-
-                news.setTimeInMillis(System.currentTimeMillis());
-                news.setNewsID(String.valueOf(news.getTimeInMillis()));
-                news.setNewsSource("Source");
-                news.setNewsSourceLink("Source link");
-                news.setNewsTopic("Topic");
-
-                new FirebaseHelper().insertNews(news, new FirebaseHelper.NewsListener() {
-                    @Override
-                    public void onNewsList(ArrayList<News> newsArrayList, boolean isSuccesful) {
-
-                    }
-
-                    @Override
-                    public void onNewsInsert(boolean isSuccessful) {
-
-                        Toast.makeText(MainActivity.this, "Forebase inserted - " + isSuccessful, Toast.LENGTH_SHORT).show();
-                    }
-                });*/
-
             }
         });
 
@@ -141,6 +163,10 @@ public class MainActivity extends AppCompatActivity
 
 
         mPager = findViewById(R.id.mainActivity_viewpager);
+        recyclerView = findViewById(R.id.mainActivity_recyclerView);
+
+        frameLayout = findViewById(R.id.mainActivity_frameLayout);
+
         initializeViewPager();
 
 
@@ -150,6 +176,7 @@ public class MainActivity extends AppCompatActivity
 
         /*For push notification*/
         FirebaseMessaging.getInstance().subscribeToTopic("subscribed");
+        FirebaseMessaging.getInstance().subscribeToTopic("wordPressNews");
 
         try {
             AppRater.app_launched(this);
@@ -164,8 +191,11 @@ public class MainActivity extends AppCompatActivity
             if (news != null) {
                 isPushNotification = intent.getBooleanExtra("pushNotification", false);
 
-                downloadNewsByID(news.getNewsID());
-
+                if (news.getContentType() == 1) {
+                    fetchCurrentAffairs(news.getNewsID());
+                } else if (news.getContentType() == 0) {
+                    downloadNewsByID(news.getNewsID());
+                }
                 Toast.makeText(this, "Notification - " + news.getNewsTitle(), Toast.LENGTH_SHORT).show();
             }
 
@@ -177,14 +207,51 @@ public class MainActivity extends AppCompatActivity
         MobileAds.initialize(getApplicationContext(), "ca-app-pub-8455191357100024~2021354499");
 
 
+        currentAffairsCardFragment = CurrentAffairsCardFragment.newInstance("", "");
+        currentAffairListFragment = CurrentAffairListFragment.newInstance("", "");
 
+
+        FloatingActionButton floatingActionButton = findViewById(R.id.fab);
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                mPager.setVisibility(View.GONE);
+
+                if (isListActive) {
+
+                    transaction = getSupportFragmentManager().beginTransaction();
+
+                    transaction.replace(R.id.mainActivity_frameLayout, currentAffairsCardFragment);
+                    //transaction.detach(currentAffairsCardFragment);
+                    transaction.commit();
+
+                    isListActive = true;
+                } else {
+
+                    transaction = getSupportFragmentManager().beginTransaction();
+
+                    transaction.replace(R.id.mainActivity_frameLayout, currentAffairListFragment);
+                    //transaction.detach(currentAffairsCardFragment);
+                    transaction.commit();
+
+                    isListActive = true;
+                }
+
+
+            }
+        });
+
+
+        initializeInAppBilling();
 
 
     }
 
     private void openDynamicLink() {
-        downloadNews();
+        //downloadNews();
 
+        fetchCurrentAffairs();
         FirebaseDynamicLinks.getInstance()
                 .getDynamicLink(getIntent())
                 .addOnSuccessListener(this, new OnSuccessListener<PendingDynamicLinkData>() {
@@ -196,14 +263,32 @@ public class MainActivity extends AppCompatActivity
                             deepLink = pendingDynamicLinkData.getLink();
                             Log.d("DeepLink", "onSuccess: " + deepLink);
 
-                            String newsID = deepLink.getQueryParameter("newsID");
+                            String contentType = deepLink.getQueryParameter("contentType");
+                            String articleID = "", newsID;
 
-                            isShareArticle = true;
-                            downloadNewsByID(newsID);
+                            if (contentType != null) {
+
+                                if (contentType.equalsIgnoreCase("1")) {
+
+                                    articleID = deepLink.getQueryParameter("articleID");
+                                    fetchCurrentAffairs(articleID);
+
+                                }
+
+
+                            } else {
+
+                                newsID = deepLink.getQueryParameter("newsID");
+
+                                isShareArticle = true;
+                                downloadNewsByID(newsID);
+
+                            }
+
 
                             try {
                                 Answers.getInstance().logCustom(new CustomEvent("User via Dynamic link")
-                                        .putCustomAttribute("News id", newsID)
+                                        .putCustomAttribute("News id", articleID)
                                 );
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -230,6 +315,80 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    private void initializeInAppBilling() {
+
+        try {
+            bp = new BillingProcessor(this,
+                    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApIC2hlPjxdNNsRDjL3P2HAxTFQyUJHcUIDYh2xxjTtCI1pQDGYrfZrjzVxzBrVlJG2KnzOtt2uVAq2btDrmsnEMNSIzUry8cydCNnJPhRBPnLsIFYZ4RlH2nQqPLmJxnrAUhXwddy5fW3wsvN2h04orAJxA1eqN/PIzN0IxzxDwwuW0ykc9s7op/Pk3Gi5rw+RZhAunRgAJU55Xic+lgPbLqTAwU+NqjVgNFnkR6iLjDpdDdsxkPHTDEhklwvQj/YHDENBBX7a9U8vBOua8YUJcXsCkbsOSf3t+zQkUDda/q42Pfm0OwzIEGsKYroQPROWbXKEmNEFy/vyuyn+zVxQIDAQAB",
+                    new BillingProcessor.IBillingHandler() {
+                        @Override
+                        public void onProductPurchased(@NonNull String productId, @Nullable TransactionDetails details) {
+                            //Toast.makeText(EditorialListWithNavActivity.this, "product purchased - " + productId, Toast.LENGTH_SHORT).show();
+                            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                            builder.setTitle("Thank you for Subscription");
+                            builder.setMessage("We appreciate your contribution by going ads free.\n\nAds will be removed when you open the app next time.");
+                            builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                }
+                            });
+                            builder.show();
+
+                            AdsSubscriptionManager.setSubscription(MainActivity.this, true);
+
+                            Answers.getInstance().logPurchase(new PurchaseEvent().putItemType("Subscription").putSuccess(true));
+
+                        }
+
+                        @Override
+                        public void onPurchaseHistoryRestored() {
+
+                        }
+
+                        @Override
+                        public void onBillingError(int errorCode, @Nullable Throwable error) {
+
+                        }
+
+                        @Override
+                        public void onBillingInitialized() {
+                            bp.loadOwnedPurchasesFromGoogle();
+
+                            try {
+                                TransactionDetails transactionDetails = bp.getSubscriptionTransactionDetails(SUBSCRIPTION_ID);
+
+                                if (transactionDetails == null) {
+                                    AdsSubscriptionManager.setSubscription(MainActivity.this, false);
+                                    return;
+                                }
+
+                                if (transactionDetails.purchaseInfo.purchaseData.autoRenewing) {
+                                    if (!AdsSubscriptionManager.getSubscription(MainActivity.this))
+                                    {
+                                        AdsSubscriptionManager.setSubscription(MainActivity.this, true);
+                                        Answers.getInstance().logCustom(new CustomEvent("Subscribed user enter"));
+                                        recreate();
+                                    }
+
+                                } else {
+                                    AdsSubscriptionManager.setSubscription(MainActivity.this, false);
+                                }
+
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                        }
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
     private void downloadNewsByID(String newsID) {
         new FirebaseHelper().fetchNewsByID(newsID, new FirebaseHelper.NewsListener() {
             @Override
@@ -246,7 +405,7 @@ public class MainActivity extends AppCompatActivity
 
                 hideLoadingDialog();
 
-                downloadNews();
+                //downloadNews();
 
             }
 
@@ -313,6 +472,223 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    public void fetchCurrentAffairs() {
+
+
+        String url = "http://aspirantworld.in/wp-json/wp/v2/posts?categories=3";
+
+       /*
+       loadCache(url);*/
+
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+
+                        Log.d(TAG, "onResponse: " + response);
+
+                        ArrayList<News> arrayList;
+
+                        arrayList = new JsonParser().parseCurrentAffairsList(response);
+
+
+                        for (News news : arrayList) {
+
+                            newsArrayList.add(news);
+                        }
+
+                        addNativeAds();
+                        //addReadStatus();
+
+                        mPagerAdapter.notifyDataSetChanged();
+
+
+                        //showRefreshing(false);
+
+                        hideLoadingDialog();
+
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                        Log.d(TAG, "onErrorResponse: " + error);
+
+                    }
+                });
+
+
+        jsonArrayRequest.setShouldCache(true);
+
+        VolleyManager.getInstance().addToRequestQueue(jsonArrayRequest, "Group request");
+
+    }
+
+    public void fetchMoreCurrentAffairs() {
+
+
+        String url = "http://aspirantworld.in/wp-json/wp/v2/posts?categories=3&page=" + pageNumber;
+
+       /*
+       loadCache(url);*/
+
+
+       isLoading = true;
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+
+                        Log.d(TAG, "onResponse: " + response);
+
+                        ArrayList<News> arrayList;
+
+                        arrayList = new JsonParser().parseCurrentAffairsList(response);
+
+                        newsArrayList.addAll(arrayList);
+
+                        addNativeAds();
+                        //addReadStatus();
+
+                        if (mPagerAdapter != null) {
+                            mPagerAdapter.notifyDataSetChanged();
+                        }
+
+
+                        pageNumber++;
+
+                        isLoading = false;
+
+
+                        //showRefreshing(false);
+
+                        hideLoadingDialog();
+
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                        Log.d(TAG, "onErrorResponse: " + error);
+                        isLoading = false;
+
+                    }
+                });
+
+
+        jsonArrayRequest.setShouldCache(true);
+
+        VolleyManager.getInstance().addToRequestQueue(jsonArrayRequest, "Group request");
+
+    }
+
+    public void fetchCurrentAffairs(long sortDateMillis) {
+
+
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+        String afterDateString = dateFormat.format(sortDateMillis) + "T00:00:00";
+        String beforeDateString = dateFormat.format((sortDateMillis + 86400000l)) + "T00:00:00";
+
+
+        String url = "http://aspirantworld.in/wp-json/wp/v2/posts?categories=3&after=" + afterDateString + "&before=" + beforeDateString;
+
+        isLoading = true;
+
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+
+                        Log.d(TAG, "onResponse: " + response);
+
+                        ArrayList<News> arrayList;
+
+                        arrayList = new JsonParser().parseCurrentAffairsList(response);
+
+                        newsArrayList.clear();
+
+                        newsArrayList.addAll(arrayList);
+
+                        addNativeAds();
+                        //addReadStatus();
+
+                        mPagerAdapter.notifyDataSetChanged();
+
+                        mPager.setAdapter(mPagerAdapter);
+
+                        isLoading = false;
+
+                        //showRefreshing(false);
+
+                        hideLoadingDialog();
+
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                        Log.d(TAG, "onErrorResponse: " + error);
+
+                    }
+                });
+
+
+        jsonArrayRequest.setShouldCache(true);
+
+        VolleyManager.getInstance().addToRequestQueue(jsonArrayRequest, "Group request");
+
+    }
+
+
+    private void fetchCurrentAffairs(String articleID) {
+
+        String url = "http://aspirantworld.in/wp-json/wp/v2/posts/" + articleID;
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        News currentAffairs = new JsonParser().parseCurrentAffairs(response);
+
+                        MainActivity.this.newsArrayList.add(0, currentAffairs);
+
+
+                        mPagerAdapter.notifyDataSetChanged();
+                        mPager.setCurrentItem(0);
+                        mPager.setAdapter(mPagerAdapter);
+
+                        hideLoadingDialog();
+
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                        Log.d(TAG, "onErrorResponse: " + error);
+
+                    }
+                });
+
+
+        jsonObjectRequest.setShouldCache(true);
+
+        VolleyManager.getInstance().addToRequestQueue(jsonObjectRequest, "Group request");
+
+    }
+
+
     private void checkRepeatedArticle() {
         if (!newsArrayList.isEmpty()) {
             News firstNews = newsArrayList.get(0);
@@ -331,6 +707,10 @@ public class MainActivity extends AppCompatActivity
 
     public void addNativeAds() {
 
+        if (!AdsSubscriptionManager.checkShowAds(this)){
+            return;
+        }
+
         for (int i = 1; i < newsArrayList.size(); i = i + NewsFragment.adsCount) {
             if (newsArrayList.get(i).getNativeAd() == null) {
 
@@ -346,6 +726,9 @@ public class MainActivity extends AppCompatActivity
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
+
+
+
                     }
 
                     @Override
@@ -426,7 +809,7 @@ public class MainActivity extends AppCompatActivity
 
                     long sortDateMillis = date.getTime();
 
-                    fetchNewsByDate(sortDateMillis);
+                    fetchCurrentAffairs(sortDateMillis);
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -471,6 +854,39 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
+    private void onPurchaseClick() {
+
+        try {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Go Ads Free");
+            builder.setMessage("We are not a money making app. Ads are integrated to help app development and maintenance of apps.\n\nPlease make a small contribution and go ads free");
+            builder.setPositiveButton("Go Ads Free", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if (bp != null) {
+                        bp.subscribe(MainActivity.this, SUBSCRIPTION_ID);
+
+                        Answers.getInstance().logCustom(new CustomEvent("Subscription Flow").putCustomAttribute("Selection", "yes"));
+
+                    }
+                }
+            });
+            builder.setNegativeButton("Maybe Later", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    Answers.getInstance().logCustom(new CustomEvent("Subscription Flow").putCustomAttribute("Selection", "No"));
+
+                }
+            });
+
+            builder.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -493,6 +909,8 @@ public class MainActivity extends AppCompatActivity
             onRateUsClick();
         } else if (id == R.id.nav_text_size) {
             onTextSizeClick();
+        }else if (id== R.id.nav_adsFree){
+            onPurchaseClick();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -557,6 +975,8 @@ public class MainActivity extends AppCompatActivity
 
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
+        mPager.setVisibility(View.VISIBLE);
+        recyclerView.setVisibility(View.GONE);
 
         //change to zoom
         //mPager.setPageTransformer(true, new ZoomOutPageTransformer());
@@ -572,7 +992,9 @@ public class MainActivity extends AppCompatActivity
 
                 if (!isLoading) {
                     if ((newsArrayList.size() - position) < 3) {
-                        downloadMoreNews();
+                        //downloadMoreNews();
+                        fetchMoreCurrentAffairs();
+
                         Toast.makeText(MainActivity.this, "Loading more article", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -599,12 +1021,25 @@ public class MainActivity extends AppCompatActivity
 
 
         if (tts.isSpeaking()) {
-            speakOutWord(".");
+            speakOutWord("");
             return;
         }
 
+
+        String articleText = "";
+
+
+        String descriptionTextView = newsArrayList.get(currentReadingArticle).getNewsDescription();
+
+        if (Build.VERSION.SDK_INT >= 24) {
+            articleText = Html.fromHtml(descriptionTextView, Html.FROM_HTML_MODE_LEGACY).toString();
+        } else {
+            articleText = Html.fromHtml(descriptionTextView).toString();
+        }
+
+
         currentReadingArticle = mPager.getCurrentItem();
-        String string = newsArrayList.get(currentReadingArticle).getNewsTitle() + ". " + newsArrayList.get(currentReadingArticle).getNewsDescription().replaceAll("<br>", ".").replaceAll("<b>", "").replaceAll("</b>", "");
+        String string = newsArrayList.get(currentReadingArticle).getNewsTitle() + ". " + articleText;
 
         speakOutWord(string);
 
@@ -711,6 +1146,28 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    /*Recycler view code*/
+
+    public void initializeRecyclerView() {
+
+        mPager.setVisibility(View.GONE);
+        recyclerView.setVisibility(View.VISIBLE);
+
+
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+
+        recyclerViewArrayList.addAll(newsArrayList);
+
+        currentAffairsAdapter = new CurrentAffairsAdapter(recyclerViewArrayList, this);
+
+
+        recyclerView.setAdapter(currentAffairsAdapter);
+
+
+    }
+
 
     public void showLoadingDialog(String message) {
         pDialog.setMessage(message);
@@ -724,6 +1181,7 @@ public class MainActivity extends AppCompatActivity
             e.printStackTrace();
         }
     }
+
 
     public class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
         public ScreenSlidePagerAdapter(FragmentManager fm) {
