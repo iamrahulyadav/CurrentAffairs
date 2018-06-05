@@ -21,8 +21,8 @@ public class AppRater {
 
 
 
-    private final static int DAYS_UNTIL_PROMPT = 1;//Min number of days
-    private final static int LAUNCHES_UNTIL_PROMPT = 4;//Min number of launches
+    private final static int DAYS_UNTIL_PROMPT = 2;//Min number of days
+    private final static int LAUNCHES_UNTIL_PROMPT = 5;//Min number of launches
 
     static AlertDialog alertDialog;
 

@@ -105,9 +105,6 @@ public class News implements Serializable {
     public void setNativeAd(NativeAd nativeAd) {
         this.nativeAd = nativeAd;
 
-
-
-
     }
 
 

@@ -41,6 +41,7 @@ import android.widget.DatePicker;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import com.android.volley.Cache;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -70,6 +71,7 @@ import org.json.JSONObject;
 
 import io.fabric.sdk.android.Fabric;
 
+import java.io.UnsupportedEncodingException;
 import java.text.BreakIterator;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -109,13 +111,13 @@ public class MainActivity extends AppCompatActivity
     ProgressDialog pDialog;
 
 
-    RecyclerView recyclerView;
+   /* RecyclerView recyclerView;
     CurrentAffairsAdapter currentAffairsAdapter;
     boolean isListActive = false;
     ArrayList<Object> recyclerViewArrayList = new ArrayList<>();
 
 
-    FrameLayout frameLayout;
+    FrameLayout frameLayout;*/
 
     FragmentTransaction transaction;
     CurrentAffairsCardFragment currentAffairsCardFragment;
@@ -163,9 +165,7 @@ public class MainActivity extends AppCompatActivity
 
 
         mPager = findViewById(R.id.mainActivity_viewpager);
-        recyclerView = findViewById(R.id.mainActivity_recyclerView);
 
-        frameLayout = findViewById(R.id.mainActivity_frameLayout);
 
         initializeViewPager();
 
@@ -180,6 +180,11 @@ public class MainActivity extends AppCompatActivity
 
         try {
             AppRater.app_launched(this);
+
+            if (AdsSubscriptionManager.getSubscription(this)){
+                getSupportActionBar().setSubtitle("Subscribed (Ads Free)");
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -211,36 +216,7 @@ public class MainActivity extends AppCompatActivity
         currentAffairListFragment = CurrentAffairListFragment.newInstance("", "");
 
 
-        FloatingActionButton floatingActionButton = findViewById(R.id.fab);
-        floatingActionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
 
-                mPager.setVisibility(View.GONE);
-
-                if (isListActive) {
-
-                    transaction = getSupportFragmentManager().beginTransaction();
-
-                    transaction.replace(R.id.mainActivity_frameLayout, currentAffairsCardFragment);
-                    //transaction.detach(currentAffairsCardFragment);
-                    transaction.commit();
-
-                    isListActive = true;
-                } else {
-
-                    transaction = getSupportFragmentManager().beginTransaction();
-
-                    transaction.replace(R.id.mainActivity_frameLayout, currentAffairListFragment);
-                    //transaction.detach(currentAffairsCardFragment);
-                    transaction.commit();
-
-                    isListActive = true;
-                }
-
-
-            }
-        });
 
 
         initializeInAppBilling();
@@ -367,9 +343,11 @@ public class MainActivity extends AppCompatActivity
                                     if (!AdsSubscriptionManager.getSubscription(MainActivity.this))
                                     {
                                         AdsSubscriptionManager.setSubscription(MainActivity.this, true);
-                                        Answers.getInstance().logCustom(new CustomEvent("Subscribed user enter"));
+                                        Answers.getInstance().logPurchase(new PurchaseEvent().putItemType("Subscription").putSuccess(true));
                                         recreate();
                                     }
+
+                                    Answers.getInstance().logCustom(new CustomEvent("Subscribed user enter"));
 
                                 } else {
                                     AdsSubscriptionManager.setSubscription(MainActivity.this, false);
@@ -393,6 +371,10 @@ public class MainActivity extends AppCompatActivity
         new FirebaseHelper().fetchNewsByID(newsID, new FirebaseHelper.NewsListener() {
             @Override
             public void onNewsList(ArrayList<News> newsArrayList, boolean isSuccesful) {
+                if(newsArrayList==null){
+                    return;
+                }
+
                 if (newsArrayList.isEmpty()) {
                     Toast.makeText(MainActivity.this, "No News Found", Toast.LENGTH_SHORT).show();
                 }
@@ -475,7 +457,7 @@ public class MainActivity extends AppCompatActivity
     public void fetchCurrentAffairs() {
 
 
-        String url = "http://aspirantworld.in/wp-json/wp/v2/posts?categories=3";
+        final String url = "http://aspirantworld.in/wp-json/wp/v2/posts?categories=3,16";
 
        /*
        loadCache(url);*/
@@ -491,6 +473,7 @@ public class MainActivity extends AppCompatActivity
                         ArrayList<News> arrayList;
 
                         arrayList = new JsonParser().parseCurrentAffairsList(response);
+
 
 
                         for (News news : arrayList) {
@@ -516,6 +499,7 @@ public class MainActivity extends AppCompatActivity
                     public void onErrorResponse(VolleyError error) {
 
                         Log.d(TAG, "onErrorResponse: " + error);
+                        loadCache(url);
 
                     }
                 });
@@ -527,10 +511,54 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+
+    private void loadCache(String url) {
+
+        Cache cache = VolleyManager.getInstance().getRequestQueue().getCache();
+
+        Cache.Entry entry = cache.get(url);
+        if (entry != null) {
+            //Cache data available.
+            try {
+
+                String response = new String(entry.data, "UTF-8");
+
+
+                ArrayList<News> arrayList;
+
+                arrayList = new JsonParser().parseCurrentAffairsList(response);
+
+
+
+                for (News news : arrayList) {
+
+                    newsArrayList.add(news);
+                }
+
+                addNativeAds();
+                //addReadStatus();
+
+                mPagerAdapter.notifyDataSetChanged();
+
+
+                //showRefreshing(false);
+
+                hideLoadingDialog();
+
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        } else {
+            // Cache data not exist.
+        }
+
+    }
+
+
     public void fetchMoreCurrentAffairs() {
 
 
-        String url = "http://aspirantworld.in/wp-json/wp/v2/posts?categories=3&page=" + pageNumber;
+        String url = "http://aspirantworld.in/wp-json/wp/v2/posts?categories=3,16&page=" + pageNumber;
 
        /*
        loadCache(url);*/
@@ -597,7 +625,7 @@ public class MainActivity extends AppCompatActivity
         String beforeDateString = dateFormat.format((sortDateMillis + 86400000l)) + "T00:00:00";
 
 
-        String url = "http://aspirantworld.in/wp-json/wp/v2/posts?categories=3&after=" + afterDateString + "&before=" + beforeDateString;
+        String url = "http://aspirantworld.in/wp-json/wp/v2/posts?categories=3,16&after=" + afterDateString + "&before=" + beforeDateString;
 
         isLoading = true;
 
@@ -859,7 +887,7 @@ public class MainActivity extends AppCompatActivity
         try {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Go Ads Free");
-            builder.setMessage("We are not a money making app. Ads are integrated to help app development and maintenance of apps.\n\nPlease make a small contribution and go ads free");
+            builder.setMessage("Access the app without any ads by going ads free. Going ads free will be cheaper than Rs. 1/day or Rs. 29 / month.\n\nPlease make a small contribution and go ads free. \n\n For any query contact us at acraftystudio@gmail.com");
             builder.setPositiveButton("Go Ads Free", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
@@ -911,11 +939,18 @@ public class MainActivity extends AppCompatActivity
             onTextSizeClick();
         }else if (id== R.id.nav_adsFree){
             onPurchaseClick();
+        }else if (id==R.id.nav_archive){
+            openArchiveActivity();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void openArchiveActivity() {
+        Intent intent = new Intent(this, ArchiveActivity.class);
+        startActivity(intent);
     }
 
 
@@ -976,7 +1011,6 @@ public class MainActivity extends AppCompatActivity
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
         mPager.setVisibility(View.VISIBLE);
-        recyclerView.setVisibility(View.GONE);
 
         //change to zoom
         //mPager.setPageTransformer(true, new ZoomOutPageTransformer());
@@ -1146,27 +1180,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    /*Recycler view code*/
 
-    public void initializeRecyclerView() {
-
-        mPager.setVisibility(View.GONE);
-        recyclerView.setVisibility(View.VISIBLE);
-
-
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(mLayoutManager);
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
-
-        recyclerViewArrayList.addAll(newsArrayList);
-
-        currentAffairsAdapter = new CurrentAffairsAdapter(recyclerViewArrayList, this);
-
-
-        recyclerView.setAdapter(currentAffairsAdapter);
-
-
-    }
 
 
     public void showLoadingDialog(String message) {

@@ -102,6 +102,19 @@ public class JsonParser {
                 }
 
 
+                if (jsonObject.getJSONArray("tags").length() != 0) {
+                    news.setTagIndex(jsonObject.getJSONArray("tags").getInt(0));
+                }
+
+                try {
+                    news.setNewsImageURL(jsonObject.getJSONObject("acf").getString("image_url"));
+                    news.setNewsSourceLink(jsonObject.getJSONObject("acf").getString("source_url"));
+
+
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
                 newsArrayList.add(news);
 
             }
@@ -138,6 +151,20 @@ public class JsonParser {
                 news.setCategoryIndex(jsonObject.getJSONArray("categories").getInt(1));
             } else {
                 news.setCategoryIndex(jsonObject.getJSONArray("categories").getInt(0));
+            }
+
+            if (jsonObject.getJSONArray("tags").length() != 0) {
+                news.setTagIndex(jsonObject.getJSONArray("tags").getInt(0));
+            }
+
+
+            try {
+                news.setNewsImageURL(jsonObject.getJSONObject("acf").getString("image_url"));
+                news.setNewsSourceLink(jsonObject.getJSONObject("acf").getString("source_url"));
+
+
+            }catch (Exception e){
+                e.printStackTrace();
             }
 
 

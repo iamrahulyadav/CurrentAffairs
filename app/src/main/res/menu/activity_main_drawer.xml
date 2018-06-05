@@ -3,15 +3,24 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
+
+
+    <item
+        android:id="@+id/nav_adsFree"
+        android:icon="@drawable/ic_action_ads_free"
+        android:title="Go Ads free" />
+
+
     <item
         android:id="@+id/nav_bookmark"
         android:icon="@drawable/ic_bookmark"
         android:title="Bookmarks" />
 
+
     <item
-        android:id="@+id/nav_adsFree"
-        android:icon="@drawable/ic_bookmark"
-        android:title="Ads free" />
+        android:id="@+id/nav_archive"
+        android:icon="@drawable/ic_action_archive"
+        android:title="Archive" />
 
     <item android:title="Settings">
         <menu>
@@ -29,8 +38,6 @@
                 android:title="Change Text Size" />
         </menu>
     </item>
-
-
 
 
 
