@@ -189,6 +189,7 @@ public class MainActivity extends AppCompatActivity
             e.printStackTrace();
         }
 
+
         try {
             Intent intent = getIntent();
             News news = (News) intent.getSerializableExtra("news");
