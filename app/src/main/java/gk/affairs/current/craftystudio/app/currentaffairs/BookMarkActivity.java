@@ -106,6 +106,9 @@ public class BookMarkActivity extends AppCompatActivity {
     }
 
 
+
+
+
     public class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
         public ScreenSlidePagerAdapter(FragmentManager fm) {
             super(fm);

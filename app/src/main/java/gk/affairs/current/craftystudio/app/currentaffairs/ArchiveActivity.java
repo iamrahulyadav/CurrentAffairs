@@ -404,6 +404,9 @@ public class ArchiveActivity extends AppCompatActivity {
         }
     }
 
+    public void onTTSReaderClick(View view) {
+    }
+
     public class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
         public ScreenSlidePagerAdapter(FragmentManager fm) {
             super(fm);

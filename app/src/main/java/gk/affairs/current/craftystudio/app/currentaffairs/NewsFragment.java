@@ -385,9 +385,10 @@ public class NewsFragment extends Fragment {
     private void onBookMarkClick() {
 
         new SqlDatabaseHelper(getContext()).addSavedNews(news);
-        Toast.makeText(getContext(), "Saved ", Toast.LENGTH_SHORT).show();
 
         try {
+            Toast.makeText(getContext(), "Saved ", Toast.LENGTH_SHORT).show();
+
             Answers.getInstance().logCustom(new CustomEvent("Book mark click")
                     .putCustomAttribute("News id", news.getNewsTitle()));
         } catch (Exception e) {
@@ -452,8 +453,9 @@ public class NewsFragment extends Fragment {
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(getContext(), "Connection Failed! Try again later", Toast.LENGTH_SHORT).show();
                         try {
+                            Toast.makeText(getContext(), "Connection Failed! Try again later", Toast.LENGTH_SHORT).show();
+
                             pd.dismiss();
                         } catch (Exception exception) {
                             e.printStackTrace();

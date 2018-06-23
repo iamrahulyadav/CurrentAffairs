@@ -84,7 +84,7 @@ public class CurrentAffairsCardFragment extends Fragment {
 
         // Instantiate a ViewPager and a PagerAdapter.
 
-        mPagerAdapter = new CurrentAffairsCardFragment.ScreenSlidePagerAdapter(getActivity().getSupportFragmentManager());
+        mPagerAdapter = new CurrentAffairsCardFragment.ScreenSlidePagerAdapter(this.getChildFragmentManager());
         mPager.setAdapter(mPagerAdapter);
 
 
@@ -192,6 +192,7 @@ public class CurrentAffairsCardFragment extends Fragment {
 
                     }
                 });
+
 
                 // Initiate a request to load an ad.
                 nativeAd.loadAd();
