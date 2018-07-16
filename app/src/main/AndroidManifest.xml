@@ -46,6 +46,10 @@
         <activity
             android:name=".ArchiveActivity"
             android:label="@string/title_activity_archive"
+            android:theme="@style/LightActivityTheme" />
+        <activity
+            android:name=".CurrentAffairsFeedActivity"
+            android:label="@string/title_activity_current_affairs_feed"
             android:theme="@style/LightActivityTheme"></activity>
     </application>
 

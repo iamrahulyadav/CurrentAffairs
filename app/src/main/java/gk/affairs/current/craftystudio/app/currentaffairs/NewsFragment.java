@@ -60,7 +60,7 @@ import utils.VolleyManager;
  */
 public class NewsFragment extends Fragment {
 
-    TextView titleTextView, descriptionTextView, sourceTextView, dateTextView;
+    TextView titleTextView, descriptionTextView, sourceTextView, dateTextView, tagTextView;
 
     News news;
     int count;
@@ -105,6 +105,7 @@ public class NewsFragment extends Fragment {
         sourceTextView = view.findViewById(R.id.newsFragment_source_textView);
         dateTextView = view.findViewById(R.id.newsFragment_date_textView);
         imageView = view.findViewById(R.id.newsFragment_imageView);
+        tagTextView= view.findViewById(R.id.newsFragment_tag_textView);
 
         titleTextView.setText(news.getNewsTitle());
 
@@ -116,6 +117,8 @@ public class NewsFragment extends Fragment {
         descriptionTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize);
         titleTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize + 4);
 
+
+
         try {
             //news.setNewsDescription(news.getNewsDescription().replaceAll("\n", "<br>"));
 
@@ -125,6 +128,8 @@ public class NewsFragment extends Fragment {
             } else {
                 descriptionTextView.setText(Html.fromHtml(news.getNewsDescription()));
             }
+
+            tagTextView.setText(news.getTag());
 
         /*    SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM, yyy  ");
             String myDate = dateFormat.format(new Date(news.getTimeInMillis()));
@@ -235,6 +240,10 @@ public class NewsFragment extends Fragment {
     }
 
     private void initializeNativeAd(final View view) {
+
+        if (getContext()==null){
+            return;
+        }
 
         final NativeAd nativeAd = news.getNativeAd();
         if (nativeAd != null) {

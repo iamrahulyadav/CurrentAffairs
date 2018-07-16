@@ -40,6 +40,18 @@
                         android:src="#bababa" />
 
 
+                    <TextView
+                        android:id="@+id/newsFragment_tag_textView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Tag"
+                        android:layout_alignBottom="@id/newsFragment_imageView"
+                        android:textColor="#ffffff"
+                        android:layout_marginBottom="8dp"
+                        android:layout_marginLeft="8dp"
+                        android:textSize="14sp" />
+
                     <ImageView
                         android:id="@+id/newsFragment_share_imageView"
                         android:layout_width="28dp"
@@ -144,9 +156,6 @@
                     android:lineSpacingMultiplier="1.3"
                     android:text="Article"
                     android:textColor="?attr/primaryTextColor"
-                    android:textIsSelectable="true"
-
-
                     android:textSize="14sp" />
 
 

@@ -11,6 +11,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.NetworkImageView;
 import com.facebook.ads.NativeAd;
 import com.facebook.ads.NativeAdView;
 import com.facebook.ads.NativeAdViewAttributes;
@@ -39,6 +41,7 @@ public class CurrentAffairsAdapter extends RecyclerView.Adapter<RecyclerView.Vie
         public TextView headingTextView, dateTextView, sourceTextView, subHeadingTextView, tagTextView;
 
         ImageView readMaskImageView;
+        NetworkImageView mainImageView;
         CardView backGroundCard;
 
         public CurrentAffairsViewHolder(final View view) {
@@ -47,12 +50,14 @@ public class CurrentAffairsAdapter extends RecyclerView.Adapter<RecyclerView.Vie
             headingTextView = view.findViewById(R.id.currentAffairs_heading_textView);
             dateTextView = view.findViewById(R.id.currentAffairs_date_textView);
             sourceTextView = view.findViewById(R.id.currentAffairs_source_textView);
-            subHeadingTextView = view.findViewById(R.id.currentAffairs_subheading_textView);
+
 
             backGroundCard = view.findViewById(R.id.currentAffairs_background_card);
             readMaskImageView = view.findViewById(R.id.currentAffairs_isReadMask_imageView);
 
             tagTextView = view.findViewById(R.id.currentAffairs_tag_textView);
+
+            mainImageView = view.findViewById(R.id.currentAffairs_imageView);
 
 
             view.setOnClickListener(new View.OnClickListener() {
@@ -176,14 +181,29 @@ public class CurrentAffairsAdapter extends RecyclerView.Adapter<RecyclerView.Vie
                 News news = (News) currentAffairsArrayList.get(position);
 
                 viewHolder.headingTextView.setText(news.getNewsTitle());
-                viewHolder.dateTextView.setText(news.getTimeInMillis()+"");
+                viewHolder.dateTextView.setText("• "+news.getDate());
                 viewHolder.sourceTextView.setText(news.getNewsSource());
                 //viewHolder.subHeadingTextView.setText(news.getSubHeading());
+                viewHolder.tagTextView.setText(news.getTag());
+
+                try {
+                    if (news.getNewsImageURL() != null) {
+                        if (!news.getNewsImageURL().isEmpty()) {
+
+                            ImageLoader imageLoader = VolleyManager.getInstance().getImageLoader();
 
 
+                            viewHolder.mainImageView.setImageUrl(news.getNewsImageURL(), imageLoader);
+                        } else {
+                            viewHolder.mainImageView.setVisibility(View.GONE);
+                        }
 
-
-                viewHolder.tagTextView.setText(news.getNewsTopic());
+                    } else {
+                        viewHolder.mainImageView.setVisibility(View.GONE);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
 
         }

@@ -22,6 +22,20 @@
         android:icon="@drawable/ic_action_archive"
         android:title="Archive" />
 
+    <item android:title="App Mode">
+        <menu>
+            <item
+                android:id="@+id/nav_card_mode"
+                android:title="Card Mode" />
+
+            <item
+                android:id="@+id/nav_list_mode"
+                android:title="List Mode - with meaning" />
+
+        </menu>
+    </item>
+
+
     <item android:title="Settings">
         <menu>
             <item
@@ -38,9 +52,6 @@
                 android:title="Change Text Size" />
         </menu>
     </item>
-
-
-
 
     <item android:title="Help and Support">
         <menu>

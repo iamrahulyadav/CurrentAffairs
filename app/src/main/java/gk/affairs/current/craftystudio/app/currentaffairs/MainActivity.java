@@ -111,23 +111,17 @@ public class MainActivity extends AppCompatActivity
     ProgressDialog pDialog;
 
 
-   /* RecyclerView recyclerView;
-    CurrentAffairsAdapter currentAffairsAdapter;
-    boolean isListActive = false;
-    ArrayList<Object> recyclerViewArrayList = new ArrayList<>();
-
-
-    FrameLayout frameLayout;*/
-
     FragmentTransaction transaction;
     CurrentAffairsCardFragment currentAffairsCardFragment;
     CurrentAffairListFragment currentAffairListFragment;
     private int pageNumber = 2;
 
 
-
     BillingProcessor bp;
     final String SUBSCRIPTION_ID = "ads_free";
+
+
+    boolean isCardView = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -150,6 +144,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
 
+                setCardFragment();
 
             }
         });
@@ -167,6 +162,40 @@ public class MainActivity extends AppCompatActivity
         mPager = findViewById(R.id.mainActivity_viewpager);
 
 
+        isCardView = !SettingManager.getMode(this);
+
+        if (!SettingManager.getMode(this)) {
+
+            /*Start card  fragment*/
+            currentAffairsCardFragment = CurrentAffairsCardFragment.newInstance(-1, "");
+
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+            transaction.replace(R.id.mainActivity_frameLayout, currentAffairsCardFragment);
+
+            transaction.commit();
+
+            isCardView = true;
+
+        } else {
+
+            /*start List Fragment*/
+
+            FrameLayout frameLayout = findViewById(R.id.mainActivity_frameLayout);
+
+            CurrentAffairListFragment currentAffairListFragment = CurrentAffairListFragment.newInstance(-1);
+
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+            transaction.replace(R.id.mainActivity_frameLayout, currentAffairListFragment);
+
+            transaction.commit();
+
+            isCardView = false;
+
+        }
+
+
         initializeViewPager();
 
 
@@ -181,7 +210,7 @@ public class MainActivity extends AppCompatActivity
         try {
             AppRater.app_launched(this);
 
-            if (AdsSubscriptionManager.getSubscription(this)){
+            if (AdsSubscriptionManager.getSubscription(this)) {
                 getSupportActionBar().setSubtitle("Subscribed (Ads Free)");
             }
 
@@ -198,9 +227,30 @@ public class MainActivity extends AppCompatActivity
                 isPushNotification = intent.getBooleanExtra("pushNotification", false);
 
                 if (news.getContentType() == 1) {
-                    fetchCurrentAffairs(news.getNewsID());
+                    //fetchCurrentAffairs(news.getNewsID());
+                    if (isCardView) {
+                        if (currentAffairsCardFragment != null) {
+                            currentAffairsCardFragment.openArticleById(news.getNewsID());
+                        }
+                    } else {
+                        Intent intentCurrentFeed = new Intent(MainActivity.this, CurrentAffairsFeedActivity.class);
+                        intentCurrentFeed.putExtra("news", news);
+                        intentCurrentFeed.putExtra("isPushNotification", true);
+                        startActivity(intentCurrentFeed);
+                    }
                 } else if (news.getContentType() == 0) {
-                    downloadNewsByID(news.getNewsID());
+                    //downloadNewsByID(news.getNewsID());
+                    if (isCardView) {
+                        if (currentAffairsCardFragment != null) {
+                            currentAffairsCardFragment.openFirebaseArticleById(news.getNewsID());
+                        }
+                    } else {
+                        Intent intentCurrentFeed = new Intent(MainActivity.this, CurrentAffairsFeedActivity.class);
+                        intentCurrentFeed.putExtra("news", news);
+                        intentCurrentFeed.putExtra("isPushNotification", true);
+                        startActivity(intentCurrentFeed);
+
+                    }
                 }
                 Toast.makeText(this, "Notification - " + news.getNewsTitle(), Toast.LENGTH_SHORT).show();
             }
@@ -213,14 +263,45 @@ public class MainActivity extends AppCompatActivity
         MobileAds.initialize(getApplicationContext(), "ca-app-pub-8455191357100024~2021354499");
 
 
-        currentAffairsCardFragment = CurrentAffairsCardFragment.newInstance("", "");
-        currentAffairListFragment = CurrentAffairListFragment.newInstance("", "");
-
-
-
-
-
         initializeInAppBilling();
+
+
+    }
+
+    private void setCardFragment() {
+
+        if (isCardView) {
+
+            FrameLayout frameLayout = findViewById(R.id.mainActivity_frameLayout);
+
+            CurrentAffairListFragment currentAffairListFragment = CurrentAffairListFragment.newInstance(-1);
+
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+            transaction.replace(R.id.mainActivity_frameLayout, currentAffairListFragment);
+
+            transaction.commit();
+
+            isCardView = false;
+
+            SettingManager.setMode(this, true);
+
+
+        } else {
+            FrameLayout frameLayout = findViewById(R.id.mainActivity_frameLayout);
+
+            currentAffairsCardFragment = CurrentAffairsCardFragment.newInstance(-1, "");
+
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+            transaction.replace(R.id.mainActivity_frameLayout, currentAffairsCardFragment);
+            transaction.commit();
+
+            isCardView = true;
+
+            SettingManager.setMode(this, true);
+
+        }
 
 
     }
@@ -248,7 +329,23 @@ public class MainActivity extends AppCompatActivity
                                 if (contentType.equalsIgnoreCase("1")) {
 
                                     articleID = deepLink.getQueryParameter("articleID");
-                                    fetchCurrentAffairs(articleID);
+                                    //fetchCurrentAffairs(articleID);
+                                    if (isCardView) {
+                                        if (currentAffairsCardFragment != null) {
+                                            currentAffairsCardFragment.openArticleById(articleID);
+                                        }
+                                    } else {
+
+                                        News currentAffairs = new News();
+                                        currentAffairs.setNewsID(articleID);
+                                        currentAffairs.setContentType(1);
+
+                                        Intent intent = new Intent(MainActivity.this, CurrentAffairsFeedActivity.class);
+                                        intent.putExtra("news", currentAffairs);
+                                        intent.putExtra("isPushNotification", true);
+                                        startActivity(intent);
+
+                                    }
 
                                 }
 
@@ -258,7 +355,25 @@ public class MainActivity extends AppCompatActivity
                                 newsID = deepLink.getQueryParameter("newsID");
 
                                 isShareArticle = true;
-                                downloadNewsByID(newsID);
+                                //downloadNewsByID(newsID);
+
+                                if (isCardView) {
+                                    if (currentAffairsCardFragment != null) {
+                                        currentAffairsCardFragment.openFirebaseArticleById(newsID);
+                                    }
+                                } else {
+
+                                    News currentAffairs = new News();
+                                    currentAffairs.setNewsID(newsID);
+                                    currentAffairs.setContentType(0);
+
+                                    Intent intent = new Intent(MainActivity.this, CurrentAffairsFeedActivity.class);
+                                    intent.putExtra("news", currentAffairs);
+                                    intent.putExtra("isPushNotification", true);
+                                    startActivity(intent);
+
+                                }
+
 
                             }
 
@@ -341,8 +456,7 @@ public class MainActivity extends AppCompatActivity
                                 }
 
                                 if (transactionDetails.purchaseInfo.purchaseData.autoRenewing) {
-                                    if (!AdsSubscriptionManager.getSubscription(MainActivity.this))
-                                    {
+                                    if (!AdsSubscriptionManager.getSubscription(MainActivity.this)) {
                                         AdsSubscriptionManager.setSubscription(MainActivity.this, true);
                                         Answers.getInstance().logPurchase(new PurchaseEvent().putItemType("Subscription").putSuccess(true));
                                         recreate();
@@ -372,7 +486,7 @@ public class MainActivity extends AppCompatActivity
         new FirebaseHelper().fetchNewsByID(newsID, new FirebaseHelper.NewsListener() {
             @Override
             public void onNewsList(ArrayList<News> newsArrayList, boolean isSuccesful) {
-                if(newsArrayList==null){
+                if (newsArrayList == null) {
                     return;
                 }
 
@@ -476,7 +590,6 @@ public class MainActivity extends AppCompatActivity
                         arrayList = new JsonParser().parseCurrentAffairsList(response);
 
 
-
                         for (News news : arrayList) {
 
                             newsArrayList.add(news);
@@ -530,7 +643,6 @@ public class MainActivity extends AppCompatActivity
                 arrayList = new JsonParser().parseCurrentAffairsList(response);
 
 
-
                 for (News news : arrayList) {
 
                     newsArrayList.add(news);
@@ -565,7 +677,7 @@ public class MainActivity extends AppCompatActivity
        loadCache(url);*/
 
 
-       isLoading = true;
+        isLoading = true;
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONArray>() {
@@ -619,6 +731,32 @@ public class MainActivity extends AppCompatActivity
 
     public void fetchCurrentAffairs(long sortDateMillis) {
 
+
+        if (isCardView) {
+
+            currentAffairsCardFragment = CurrentAffairsCardFragment.newInstance(sortDateMillis, "");
+
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+            transaction.replace(R.id.mainActivity_frameLayout, currentAffairsCardFragment);
+
+            transaction.commit();
+
+        } else {
+
+            CurrentAffairListFragment currentAffairListFragment = CurrentAffairListFragment.newInstance(sortDateMillis);
+
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+            transaction.replace(R.id.mainActivity_frameLayout, currentAffairListFragment);
+
+            transaction.commit();
+
+        }
+
+
+
+/*
 
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -675,6 +813,7 @@ public class MainActivity extends AppCompatActivity
         jsonArrayRequest.setShouldCache(true);
 
         VolleyManager.getInstance().addToRequestQueue(jsonArrayRequest, "Group request");
+*/
 
     }
 
@@ -736,7 +875,7 @@ public class MainActivity extends AppCompatActivity
 
     public void addNativeAds() {
 
-        if (!AdsSubscriptionManager.checkShowAds(this)){
+        if (!AdsSubscriptionManager.checkShowAds(this)) {
             return;
         }
 
@@ -755,7 +894,6 @@ public class MainActivity extends AppCompatActivity
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-
 
 
                     }
@@ -916,37 +1054,77 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_bookmark) {
-            onBookmarkClick();
-        } else if (id == R.id.nav_day_mode) {
-            onDayModeClick();
+        switch (id) {
 
-        } else if (id == R.id.nav_night_mode) {
-            onNightModeClick();
-        } else if (id == R.id.nav_share) {
-            onShareClick();
-        } else if (id == R.id.nav_suggestion) {
-            onSuggestionClick();
-        } else if (id == R.id.nav_rate_us) {
-            onRateUsClick();
-        } else if (id == R.id.nav_text_size) {
-            onTextSizeClick();
-        }else if (id== R.id.nav_adsFree){
-            onPurchaseClick();
-        }else if (id==R.id.nav_archive){
-            openArchiveActivity();
+            case R.id.nav_bookmark:
+                onBookmarkClick();
+                break;
+
+            case R.id.nav_day_mode:
+                onDayModeClick();
+                break;
+
+            case R.id.nav_night_mode:
+                onNightModeClick();
+                break;
+
+            case R.id.nav_share:
+                onShareClick();
+                break;
+
+            case R.id.nav_suggestion:
+                onSuggestionClick();
+                break;
+
+            case R.id.nav_rate_us:
+                onRateUsClick();
+                break;
+
+            case R.id.nav_text_size:
+                onTextSizeClick();
+                break;
+
+            case R.id.nav_adsFree:
+                onPurchaseClick();
+                break;
+
+            case R.id.nav_archive:
+                openArchiveActivity();
+                break;
+
+            case R.id.nav_card_mode:
+
+                onCardMode();
+                break;
+
+            case R.id.nav_list_mode:
+
+                onListMode();
+                break;
+
         }
+
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void onListMode() {
+        SettingManager.setMode(this, true);
+        recreate();
+    }
+
+    private void onCardMode() {
+        SettingManager.setMode(this, false);
+        recreate();
     }
 
     private void openArchiveActivity() {
@@ -1011,7 +1189,7 @@ public class MainActivity extends AppCompatActivity
 
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
-        mPager.setVisibility(View.VISIBLE);
+        //mPager.setVisibility(View.VISIBLE);
 
         //change to zoom
         //mPager.setPageTransformer(true, new ZoomOutPageTransformer());
@@ -1062,9 +1240,14 @@ public class MainActivity extends AppCompatActivity
 
 
         String articleText = "";
+        News news;
+        if (currentAffairsCardFragment != null) {
+            news = currentAffairsCardFragment.getCurrentNews();
+        } else {
+            return;
+        }
 
-
-        String descriptionTextView = newsArrayList.get(currentReadingArticle).getNewsDescription();
+        String descriptionTextView = news.getNewsDescription();
 
         if (Build.VERSION.SDK_INT >= 24) {
             articleText = Html.fromHtml(descriptionTextView, Html.FROM_HTML_MODE_LEGACY).toString();
@@ -1074,13 +1257,13 @@ public class MainActivity extends AppCompatActivity
 
 
         currentReadingArticle = mPager.getCurrentItem();
-        String string = newsArrayList.get(currentReadingArticle).getNewsTitle() + ". " + articleText;
+        String string = news.getNewsTitle() + ". " + articleText;
 
         speakOutWord(string);
 
         try {
             Answers.getInstance().logCustom(new CustomEvent("TTS Reader")
-                    .putCustomAttribute("News id", newsArrayList.get(currentReadingArticle).getNewsTitle()));
+                    .putCustomAttribute("News id", news.getNewsTitle()));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1180,8 +1363,6 @@ public class MainActivity extends AppCompatActivity
             e.printStackTrace();
         }
     }
-
-
 
 
     public void showLoadingDialog(String message) {

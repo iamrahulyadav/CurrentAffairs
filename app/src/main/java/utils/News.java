@@ -289,6 +289,9 @@ public class News implements Serializable {
             case 15:
                 setCategory("Live Mint");
                 break;
+            case 33:
+                setCategory("One Liners");
+                break;
 
             default:
                 setCategory("Others");

@@ -1,116 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/currentAffairs_background_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:id="@+id/currentAffairs_background_card"
 
     android:layout_marginBottom="8dp"
-    app:cardElevation="2dp"
-    app:cardCornerRadius="0dp">
-
+    app:cardCornerRadius="0dp"
+    app:cardElevation="2dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="horizontal"
 
-        <TextView
-            android:id="@+id/currentAffairs_source_textView"
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent"
-            android:layout_marginTop="4dp"
-            android:layout_weight="1"
-            android:text="source"
-            android:textAlignment="center"
-            android:textAllCaps="true"
-            android:textColor="?attr/colorAccent"
-            android:textSize="12sp"
-            android:typeface="monospace" />
+        android:padding="8dp">
 
-        <TextView
-            android:id="@+id/currentAffairs_heading_textView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
-            android:layout_marginLeft="12dp"
-            android:layout_marginRight="12dp"
-            android:layout_marginTop="0dp"
-            android:text="This is heading text for demo purpose and testing layout"
-            android:textColor="?attr/primaryTextColor"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/currentAffairs_subheading_textView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="12dp"
-            android:layout_marginRight="12dp"
-            android:layout_marginTop="4dp"
-            android:text="This is sub heading text for list view this text is shown by android textview is it looking goog or not"
-            android:textColor="?attr/secondaryTextColor"
-            android:textSize="12sp" />
-
-
-
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginLeft="12dp"
-            android:layout_marginRight="12dp"
-            android:layout_marginTop="4dp"
-            android:background="?attr/secondaryTextColor">
-
-        </ImageView>
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="6dp"
-            android:layout_marginLeft="14dp"
-            android:layout_marginRight="14dp"
-            android:layout_marginTop="6dp"
-            android:orientation="horizontal">
-
-
-
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/currentAffairs_date_textView"
-                android:layout_width="wrap_content"
-                android:layout_weight="1"
+                android:id="@+id/currentAffairs_source_textView"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:text="12-03-2018"
-                android:textColor="?attr/secondaryTextColor"
-                android:textSize="12sp" />
-
+                android:layout_gravity="center"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_marginTop="4dp"
+                android:layout_weight="1"
+                android:text="source"
+                android:textAlignment="center"
+                android:textAllCaps="true"
+                android:textColor="?attr/colorAccent"
+                android:textSize="10sp" />
 
             <TextView
-                android:id="@+id/currentAffairs_tag_textView"
-                android:layout_width="wrap_content"
+                android:id="@+id/currentAffairs_heading_textView"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:text="Tag"
-                android:layout_weight="1"
-                android:textAlignment="textEnd"
-                android:textColor="?attr/secondaryTextColor"
-                android:textSize="12sp"
-                />
+                android:layout_marginBottom="4dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_marginTop="0dp"
+                android:text="This is heading text for demo purpose and testing layout"
+                android:textColor="?attr/primaryTextColor"
+                android:textSize="16sp" />
 
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginLeft="12dp"
+                android:layout_marginRight="12dp"
+                android:layout_marginTop="4dp"
+                android:background="?attr/secondaryTextColor"
+
+                android:visibility="gone">
+
+            </ImageView>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal">
+
+
+                <TextView
+                    android:id="@+id/currentAffairs_tag_textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tag"
+                    android:textColor="?attr/primaryTextColor"
+                    android:textSize="10sp" />
+
+                <TextView
+                    android:id="@+id/currentAffairs_date_textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginLeft="8dp"
+                    android:layout_weight="1"
+                    android:text="12-03-2018"
+                    android:textColor="?attr/secondaryTextColor"
+                    android:textSize="10sp" />
+
+
+            </LinearLayout>
+
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="?attr/colorPrimary"
+                android:visibility="gone">
+
+            </ImageView>
 
         </LinearLayout>
 
 
+        <android.support.v7.widget.CardView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            app:cardCornerRadius="4dp"
+            app:cardElevation="0dp">
 
+            <com.android.volley.toolbox.NetworkImageView
+                android:id="@+id/currentAffairs_imageView"
+                android:layout_width="100dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:background="?attr/readMaskColor"
+                android:maxHeight="100dp"
+                android:scaleType="centerCrop"
+                android:src="#bababa" />
 
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="2dp"
-            android:background="?attr/colorPrimary">
+        </android.support.v7.widget.CardView>
 
-        </ImageView>
 
     </LinearLayout>
 
